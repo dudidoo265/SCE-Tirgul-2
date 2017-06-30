@@ -42,7 +42,7 @@ class test_web(LiveServerTestCase):
         first_name = self.browser.find_element_by_id("first_name").send_keys('tomer')
         last_name = self.browser.find_element_by_id("last_name").send_keys('admon')
         id = self.browser.find_element_by_id("id").send_keys('123' +Keys.RETURN )
-        assert u'המצביע אינו מופיע בבסיס הנתונים' not in self.browser.page_source or u'המשתמש הנל הצביע כבר' in self.browser.page_source
+        assert 'Home' in self.browser.title
 
     def test_bad_login(self):
         first_name = self.browser.find_element_by_id("first_name")

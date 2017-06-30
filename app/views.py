@@ -6,10 +6,10 @@ from flask import render_template, flash, redirect, url_for, request, g
 from flask import send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 
-from app import app, login_manager
+from app import app, login_manager , db
 from .forms import LoginForm
 from .models import User, Party
-
+from sqlalchemy import update
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -17,9 +17,8 @@ def load_user(user_id):
 
 
 def validateAndAdd(party_name):
-    ## implement me!
-    pass
-
+    party =  Party.query.filter_by(name=party_name).first()
+    party.votes +=  1
 
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET', 'POST'])
@@ -27,6 +26,12 @@ def validateAndAdd(party_name):
 def index():
     if request.method == 'POST':
         validateAndAdd(request.form['party_name'])
+
+        #####
+        user = User.query.filter_by(id=current_user.id).first()
+        user.voted = 1
+        db.session.commit()
+
         return redirect(url_for('login'))
     g.user = current_user #global user parameter used by flask framwork
     parties = Party.query.all() #this is a demo comment
@@ -42,17 +47,31 @@ def login():
     if request.method == 'POST':
 
         ## Validate user
-        first_name = request.form['first_name']
-        if first_name == "tomer":
-            user = User.query.filter_by(first_name=first_name).first()
-            login_user(user)  ## built in 'flask login' method that creates a user session
-            return redirect(url_for('index'))
+        fn = request.form['first_name']
+        ln = request.form['last_name']
+        uid = request.form['id']
+
+
+        user = User.query.filter_by(first_name= fn , last_name=ln , id =uid).first()
+        if user:
+            if user.voted == 0 :
+                login_user(user)  ## built in 'flask login' method that creates a user session
+                return redirect(url_for('index'))
+            else :
+                error =u'המשתמש הנל הצביע כבר'
 
         else: ##validation error
             error = u'המצביע אינו מופיע בבסיס הנתונים'
 
     return render_template('login.html',
                            error=error)
+
+
+
+
+
+
+
 
 
 ## will handle the logout request
